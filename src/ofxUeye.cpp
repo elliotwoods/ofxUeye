@@ -23,7 +23,7 @@ namespace ofxUeye {
 			is_GetDuration(cameraHandle, IS_SE_STARTER_FW_UPLOAD, &timeNeeded);
 			OFXMV_WARNING << "Camera firmware upload required, please wait " << timeNeeded << "s";
 			cameraHandle = (HIDS) (((INT) cameraHandle) | IS_ALLOW_STARTER_FW_UPLOAD);
-			result = is_InitCamera(&cameraHandle);
+			result = is_InitCamera(&cameraHandle, NULL);
 		}
 
 		if (result != IS_SUCCESS) {
@@ -53,11 +53,11 @@ namespace ofxUeye {
 		specification.addFeature(Feature::Feature_Exposure);
 		specification.addFeature(Feature::Feature_FreeRun);
 		specification.addFeature(Feature::Feature_Gain);
-		specification.addFeature(Feature::Feature_GPO);
 		specification.addFeature(Feature::Feature_OneShot);
 		specification.addFeature(Feature::Feature_PixelClock);
 		specification.addFeature(Feature::Feature_ROI);
-		specification.addFeature(Feature::Feature_Triggering);
+		//specification.addFeature(Feature::Feature_Triggering);
+		//specification.addFeature(Feature::Feature_GPO);
 
 		return specification;
 	}
@@ -70,19 +70,18 @@ namespace ofxUeye {
 
 	//----------
 	bool Device::startCapture() {
-		if (is_CaptureVideo(this->cameraHandle, IS_DONT_WAIT) != IS_SUCCESS) {
-			OFXMV_ERROR << "Couldn't start capture";
-			return false;
-		} else {
-			return true;
-		}
+		//if (is_CaptureVideo(this->cameraHandle, IS_DONT_WAIT) != IS_SUCCESS) {
+		//	OFXMV_ERROR << "Couldn't start capture";
+		//	return false;
+		//} else {
+		//	return true;
+		//}
+		return true;
 	}
 
 	//----------
 	void Device::stopCapture() {
-		if (!is_FreezeVideo(this->cameraHandle, IS_DONT_WAIT)) {
-			OFXMV_ERROR << "Couldn't stop capture";
-		}
+		//currently we don't use free run mode
 	}
 
 	//----------
@@ -196,5 +195,29 @@ namespace ofxUeye {
 		aoiRect.s32Height = (int) roi.height;
 
 		is_AOI(this->cameraHandle, IS_AOI_IMAGE_SET_AOI, &aoiRect, sizeof(aoiRect));
+	}
+
+	//----------
+	void Device::getFrame(shared_ptr<Frame> frame) {
+		auto result = is_FreezeVideo(this->cameraHandle, IS_WAIT);
+		if (result != IS_SUCCESS) {
+			if (result != IS_TIMED_OUT) {
+				OFXMV_ERROR << "Failed to capture frame";
+			}
+			return;
+		}
+		
+		frame->lockForWriting();
+
+		UEYEIMAGEINFO imageInfo;
+		if (is_GetImageInfo(this->cameraHandle, this->imageMemoryID, &imageInfo, sizeof(imageInfo)) == IS_SUCCESS) {
+			frame->setTimestamp(imageInfo.u64TimestampDevice / 10);
+			frame->setFrameIndex(imageInfo.u64FrameNumber);
+		} else {
+			OFXMV_ERROR << "Failed to get frame info";
+		}
+
+		frame->getPixelsRef() = this->pixels;
+		frame->unlock();
 	}
 }
