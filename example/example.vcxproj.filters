@@ -1,0 +1,60 @@
+<?xml version="1.0"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+	<ItemGroup>
+		<ClCompile Include="src\ofApp.cpp">
+			<Filter>src</Filter>
+		</ClCompile>
+		<ClCompile Include="src\main.cpp">
+			<Filter>src</Filter>
+		</ClCompile>
+		<ClCompile Include="src\main.cpp">
+			<Filter>src</Filter>
+		</ClCompile>
+		<ClCompile Include="src\ofApp.cpp">
+			<Filter>src</Filter>
+		</ClCompile>
+		<ClCompile Include="..\..\..\addons\ofxUeye\src\ofxUeye.cpp">
+			<Filter>addons\ofxUeye\src</Filter>
+		</ClCompile>
+	</ItemGroup>
+	<ItemGroup>
+		<Filter Include="src">
+			<UniqueIdentifier>{d8376475-7454-4a24-b08a-aac121d3ad6f}</UniqueIdentifier>
+		</Filter>
+		<Filter Include="addons">
+			<UniqueIdentifier>{71834f65-f3a9-211e-73b8-dc8563776aec}</UniqueIdentifier>
+		</Filter>
+		<Filter Include="addons\ofxUeye">
+			<UniqueIdentifier>{8f22bd46-5f4a-19e1-8af5-106fd3d92ade}</UniqueIdentifier>
+		</Filter>
+		<Filter Include="addons\ofxUeye\src">
+			<UniqueIdentifier>{4f4a71c4-ed23-2ae2-226c-a695b3d1e148}</UniqueIdentifier>
+		</Filter>
+		<Filter Include="addons\ofxUeye\libs">
+			<UniqueIdentifier>{90e2f860-7580-898f-98a8-c9d61a5caaba}</UniqueIdentifier>
+		</Filter>
+		<Filter Include="addons\ofxUeye\libs\ueye">
+			<UniqueIdentifier>{95a4e51a-8675-61d7-2fc2-b457a5683113}</UniqueIdentifier>
+		</Filter>
+		<Filter Include="addons\ofxUeye\libs\ueye\include">
+			<UniqueIdentifier>{b8948f50-cd3b-6144-e24b-c6defaeab2d7}</UniqueIdentifier>
+		</Filter>
+	</ItemGroup>
+	<ItemGroup>
+		<ClInclude Include="src\ofApp.h">
+			<Filter>src</Filter>
+		</ClInclude>
+		<ClInclude Include="src\ofApp.h">
+			<Filter>src</Filter>
+		</ClInclude>
+		<ClInclude Include="..\..\..\addons\ofxUeye\src\ofxUeye.h">
+			<Filter>addons\ofxUeye\src</Filter>
+		</ClInclude>
+		<ClInclude Include="..\..\..\addons\ofxUeye\libs\ueye\include\uEye.h">
+			<Filter>addons\ofxUeye\libs\ueye\include</Filter>
+		</ClInclude>
+	</ItemGroup>
+	<ItemGroup>
+		<ResourceCompile Include="icon.rc" />
+	</ItemGroup>
+</Project>
