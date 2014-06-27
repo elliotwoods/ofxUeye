@@ -1,5 +1,5 @@
 #include "ofxUeye.h"
-#include <uEye.h>
+#include "../libs/ueye/include/uEye.h"
 
 using namespace ofxMachineVision;
 
@@ -38,7 +38,7 @@ namespace ofxUeye {
 		SENSORINFO sensorInfo;
 		is_GetSensorInfo(this->cameraHandle, &sensorInfo);
 
-		auto specification = Specification(sensorInfo.nMaxWidth, sensorInfo.nMaxHeight, "IDS Imaging", cameraInfo.ID, cameraInfo.SerNo);
+		auto specification = Specification(sensorInfo.nMaxWidth, sensorInfo.nMaxHeight, cameraInfo.ID, sensorInfo.strSensorName, cameraInfo.SerNo);
 
 		this->pixels.allocate(specification.getSensorWidth(), specification.getSensorHeight(), OF_IMAGE_GRAYSCALE);
 		is_SetAllocatedImageMem(this->cameraHandle, specification.getSensorWidth(), specification.getSensorHeight(), 8, (char *) this->pixels.getPixels(), &this->imageMemoryID);
@@ -87,12 +87,15 @@ namespace ofxUeye {
 	//----------
 	void Device::setExposure(Microseconds exposureMicros) {
 		double autoExposure = 0.0;
-		if (is_SetAutoParameter(this->cameraHandle, IS_SET_ENABLE_AUTO_SHUTTER, &autoExposure, 0) != IS_SUCCESS) {
+		int result;
+		result = is_SetAutoParameter(this->cameraHandle, IS_SET_ENABLE_AUTO_SHUTTER, &autoExposure, 0);
+		if (result != IS_SUCCESS) {
 			OFXMV_ERROR << "Couldn't stop auto exposure";
 		}
 
 		double exposureMillis = (double) exposureMicros / 1000.0;
-		if (is_Exposure(this->cameraHandle, IS_EXPOSURE_CMD_SET_EXPOSURE, &exposureMillis, 1) != IS_SUCCESS) {
+		result = is_Exposure(this->cameraHandle, IS_EXPOSURE_CMD_SET_EXPOSURE, &exposureMillis, sizeof(exposureMillis));
+		if (result != IS_SUCCESS) {
 			OFXMV_ERROR << "Couldn't set exposure";
 		}
 	}
@@ -100,12 +103,15 @@ namespace ofxUeye {
 	//----------
 	void Device::setGain(float gain) {
 		double autoGain = 0.0;
-		if (is_SetAutoParameter(this->cameraHandle, IS_SET_ENABLE_AUTO_GAIN, &autoGain, 0) != IS_SUCCESS) {
+		int result;
+		result = is_SetAutoParameter(this->cameraHandle, IS_SET_ENABLE_AUTO_GAIN, &autoGain, 0);
+		if (result != IS_SUCCESS) {
 			OFXMV_ERROR << "Couldn't stop auto gain";
 		}
 
 		double gainDouble = (double) gain * 100.0;
-		if (is_SetHWGainFactor(this->cameraHandle, IS_SET_MASTER_GAIN_FACTOR, gainDouble) != IS_SUCCESS) {
+		result = is_SetHWGainFactor(this->cameraHandle, IS_SET_MASTER_GAIN_FACTOR, gainDouble);
+		if (result != IS_SUCCESS) {
 			OFXMV_ERROR << "Couldn't set gain";
 		}
 	}
