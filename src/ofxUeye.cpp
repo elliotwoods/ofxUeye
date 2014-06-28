@@ -109,8 +109,8 @@ namespace ofxUeye {
 			OFXMV_ERROR << "Couldn't stop auto gain";
 		}
 
-		double gainDouble = (double) gain * 100.0;
-		result = is_SetHWGainFactor(this->cameraHandle, IS_SET_MASTER_GAIN_FACTOR, gainDouble);
+		int gainInt = (int) (gain * 100.0f);
+		result = is_SetHardwareGain(this->cameraHandle, gainInt, IS_IGNORE_PARAMETER, IS_IGNORE_PARAMETER, IS_IGNORE_PARAMETER);
 		if (result != IS_SUCCESS) {
 			OFXMV_ERROR << "Couldn't set gain";
 		}
