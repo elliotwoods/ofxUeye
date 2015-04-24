@@ -6,6 +6,7 @@ namespace ofxUeye {
 	class Device : public ofxMachineVision::Device::Blocking {
 	public:
 		Device();
+		string getTypeName() const override;
 		ofxMachineVision::Specification open(int deviceID = 0) override;
 		void close() override;
 		bool startCapture() override;

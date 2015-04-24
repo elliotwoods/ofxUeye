@@ -11,6 +11,11 @@ namespace ofxUeye {
 	}
 
 	//----------
+	string Device::getTypeName() const {
+		return "UEye";
+	}
+
+	//----------
 	Specification Device::open(int deviceID) {
 		HIDS cameraHandle = deviceID + 1001 | IS_USE_DEVICE_ID;
 		int result;
@@ -53,7 +58,8 @@ namespace ofxUeye {
 		specification.addFeature(Feature::Feature_Exposure);
 		specification.addFeature(Feature::Feature_FreeRun);
 		specification.addFeature(Feature::Feature_Gain);
-		specification.addFeature(Feature::Feature_OneShot);
+		//HACK FOR LIGHT BARRIER PRAGUE
+		//specification.addFeature(Feature::Feature_OneShot);
 		specification.addFeature(Feature::Feature_PixelClock);
 		specification.addFeature(Feature::Feature_ROI);
 		//specification.addFeature(Feature::Feature_Triggering);
