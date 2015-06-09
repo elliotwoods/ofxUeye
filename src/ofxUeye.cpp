@@ -17,7 +17,7 @@ namespace ofxUeye {
 
 	//----------
 	Specification Device::open(int deviceID) {
-		HIDS cameraHandle = deviceID + 1001 | IS_USE_DEVICE_ID;
+		HIDS cameraHandle = deviceID + IS_USE_DEVICE_ID;
 		int result;
 
 		result = is_InitCamera(&cameraHandle, NULL);
