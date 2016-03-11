@@ -103,7 +103,7 @@
     <ProjectReference Include="..\..\..\libs\openFrameworksCompiled\project\vs\openframeworksLib.vcxproj">
       <Project>{5837595d-aca9-485c-8e76-729040ce4b0b}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\..\ofxMachineVision\ofxMachineVisionLib\ofxMachineVisionLib.vcxproj">
+    <ProjectReference Include="..\..\..\addons\ofxMachineVision\ofxMachineVisionLib\ofxMachineVisionLib.vcxproj">
       <Project>{cd4455e0-0454-4c3c-bb42-9d15d16a34dd}</Project>
     </ProjectReference>
   </ItemGroup>
