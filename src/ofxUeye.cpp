@@ -17,11 +17,26 @@ namespace ofxMachineVision {
 		}
 
 		//----------
-		Specification UEye::open(int deviceID) {
-			HIDS cameraHandle = deviceID + 1001 | IS_USE_DEVICE_ID;
+		Specification UEye::open(shared_ptr<Base::InitialisationSettings> initialisationSettings) {
+			auto settings = this->getTypedSettings<InitialisationSettings>(initialisationSettings);		
+
 			int result;
 
-			result = is_InitCamera(&cameraHandle, NULL);
+			{
+				//get camera ID or device ID
+				HIDS cameraHandle;
+				if (settings->useCameraIDAsDeviceID) {
+					cameraHandle = settings->deviceID;
+				}
+				else {
+					cameraHandle = settings->deviceID + 1001 | IS_USE_DEVICE_ID;
+				}
+
+				//open the camera
+				result = is_InitCamera(&cameraHandle, NULL);
+				this->cameraHandle = cameraHandle;
+			}
+			
 
 			//upload firmware if we have to
 			if (result == IS_STARTER_FW_UPLOAD_NEEDED) {
@@ -32,28 +47,87 @@ namespace ofxMachineVision {
 				result = is_InitCamera(&cameraHandle, NULL);
 			}
 
+			//check it opened correctly
 			if (result != IS_SUCCESS) {
 				OFXMV_WARNING << "Couldn't open device with specified Device ID, attempting instead to open camera with Camera ID 1";
-				cameraHandle = 1;
+				HIDS cameraHandle = 1;
 				result = is_InitCamera(&cameraHandle, NULL);
+				this->cameraHandle = cameraHandle;
 			}
-
 			if (result != IS_SUCCESS) {
 				OFXMV_ERROR << "Couldn't initialise camera";
 				return Specification();
 			}
 
-			this->cameraHandle = cameraHandle;
-
+			//get camera properties
 			BOARDINFO cameraInfo;
-			is_GetCameraInfo(this->cameraHandle, &cameraInfo);
+			result = is_GetCameraInfo(this->cameraHandle, &cameraInfo);
+			if (result != IS_SUCCESS) {
+				OFXMV_ERROR << "Can't get camera info";
+				return Specification();
+			}
 			SENSORINFO sensorInfo;
-			is_GetSensorInfo(this->cameraHandle, &sensorInfo);
+			result = is_GetSensorInfo(this->cameraHandle, &sensorInfo);
+			if (result != IS_SUCCESS) {
+				OFXMV_ERROR << "Can't get sensor info";
+				return Specification();
+			}
 
-			auto specification = Specification(sensorInfo.nMaxWidth, sensorInfo.nMaxHeight, cameraInfo.ID, sensorInfo.strSensorName, cameraInfo.SerNo);
+			//default width and height is sensor maximum
+			int width = sensorInfo.nMaxWidth;
+			int height = sensorInfo.nMaxHeight;
 
-			this->pixels.allocate(specification.getSensorWidth(), specification.getSensorHeight(), OF_IMAGE_GRAYSCALE);
-			is_SetAllocatedImageMem(this->cameraHandle, specification.getSensorWidth(), specification.getSensorHeight(), 8, (char *) this->pixels.getPixels(), &this->imageMemoryID);
+			//set the image format
+			if (settings->useImageFormat) {
+				int imageFormat = settings->imageFormat;
+				//from is_ImageFormat reference:
+
+				// Get number of available formats and size of list
+				UINT count;
+				UINT bytesNeeded = sizeof(IMAGE_FORMAT_LIST);
+				result = is_ImageFormat(this->cameraHandle, IMGFRMT_CMD_GET_NUM_ENTRIES, &count, sizeof(count));
+				bytesNeeded += (count - 1) * sizeof(IMAGE_FORMAT_INFO);
+				void* ptr = malloc(bytesNeeded);
+
+				// Create and fill list
+				IMAGE_FORMAT_LIST* pformatList = (IMAGE_FORMAT_LIST*)ptr;
+				pformatList->nSizeOfListEntry = sizeof(IMAGE_FORMAT_INFO);
+				pformatList->nNumListElements = count;
+				result = is_ImageFormat(this->cameraHandle, IMGFRMT_CMD_GET_LIST, pformatList, bytesNeeded);
+
+				//go through list finding our format
+				bool foundFormat = false;
+				for (int i = 0; i < count; i++) {
+					auto & format = pformatList->FormatInfo[i];
+					if (format.nFormatID == imageFormat) {
+						//found the format
+						width = format.nWidth;
+						height = format.nHeight;
+
+						result = is_ImageFormat(this->cameraHandle, IMGFRMT_CMD_SET_FORMAT, &imageFormat, sizeof(imageFormat));
+						if (result != IS_SUCCESS) {
+							OFXMV_ERROR << "Couldn't set image format";
+						}
+
+						foundFormat = true;
+						break;
+					}
+				}
+				if (!foundFormat) {
+					OFXMV_ERROR << "This camera doesn't support the image format you specified.";
+					OFXMV_NOTICE << "Supported formats:";
+
+					for (int i = 0; i < count; i++) {
+						auto & format = pformatList->FormatInfo[i];
+						OFXMV_NOTICE << " [" << format.nFormatID << "] \"" << format.strFormatName << "\" " << format.nWidth << "x" << format.nHeight;
+					}
+				}
+			}
+
+			auto specification = Specification(width, height, cameraInfo.ID, sensorInfo.strSensorName, cameraInfo.SerNo);
+
+			this->pixels.allocate(width, height, OF_IMAGE_GRAYSCALE);
+			is_SetAllocatedImageMem(this->cameraHandle, width, height, 8, (char *) this->pixels.getPixels(), &this->imageMemoryID);
 			is_SetImageMem(this->cameraHandle, (char *) this->pixels.getPixels(), this->imageMemoryID);
 
 			//setup some camera parameters
@@ -77,6 +151,7 @@ namespace ofxMachineVision {
 
 		//----------
 		void UEye::close() {
+			is_FreeImageMem(this->cameraHandle, (char *) this->pixels.getPixels(), this->imageMemoryID);
 			is_ExitCamera(this->cameraHandle);
 			this->cameraHandle = NULL;
 		}

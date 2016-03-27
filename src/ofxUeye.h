@@ -6,9 +6,29 @@ namespace ofxMachineVision {
 	namespace Device {
 		class UEye : public ofxMachineVision::Device::Blocking {
 		public:
+			struct InitialisationSettings : Base::InitialisationSettings {
+			public:
+				InitialisationSettings() {
+					add(useCameraIDAsDeviceID.set("Use Device ID as Camera ID", true));
+
+					add(useImageFormat.set("Use Image Format", false));
+					add(imageFormat.set("Image Format", 1));
+
+					this->deviceID = 1;
+				}
+				
+				ofParameter<bool> useCameraIDAsDeviceID;
+
+				ofParameter<bool> useImageFormat;
+				ofParameter<int> imageFormat;
+			};
+
 			UEye();
 			string getTypeName() const override;
-			ofxMachineVision::Specification open(int deviceID = 0) override;
+			shared_ptr<Base::InitialisationSettings> getDefaultSettings() override {
+				return make_shared<InitialisationSettings>();
+			}
+			Specification open(shared_ptr<Base::InitialisationSettings> = nullptr) override;
 			void close() override;
 			bool startCapture() override;
 			void stopCapture() override;
