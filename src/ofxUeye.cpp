@@ -124,34 +124,22 @@ namespace ofxMachineVision {
 				}
 			}
 
-			auto specification = Specification(width, height, cameraInfo.ID, sensorInfo.strSensorName, cameraInfo.SerNo);
+			auto specification = Specification(CaptureSequenceType::Continuous, width, height, cameraInfo.ID, sensorInfo.strSensorName, cameraInfo.SerNo);
 
 			this->pixels.allocate(width, height, OF_IMAGE_GRAYSCALE);
-			is_SetAllocatedImageMem(this->cameraHandle, width, height, 8, (char *) this->pixels.getPixels(), &this->imageMemoryID);
-			is_SetImageMem(this->cameraHandle, (char *) this->pixels.getPixels(), this->imageMemoryID);
+			is_SetAllocatedImageMem(this->cameraHandle, width, height, 8, (char *) this->pixels.getData(), &this->imageMemoryID);
+			is_SetImageMem(this->cameraHandle, (char *) this->pixels.getData(), this->imageMemoryID);
 
 			//setup some camera parameters
 			is_SetColorMode(this->cameraHandle, IS_CM_SENSOR_RAW8);
 			result = is_SetOptimalCameraTiming(this->cameraHandle, IS_BEST_PCLK_RUN_ONCE, 4000, &this->maxClock, &this->fps);;
-
-			specification.addFeature(Feature::Feature_Binning);
-			specification.addFeature(Feature::Feature_DeviceID);
-			specification.addFeature(Feature::Feature_Exposure);
-			specification.addFeature(Feature::Feature_FreeRun);
-			specification.addFeature(Feature::Feature_Gain);
-			//HACK FOR LIGHT BARRIER PRAGUE
-			//specification.addFeature(Feature::Feature_OneShot);
-			specification.addFeature(Feature::Feature_PixelClock);
-			specification.addFeature(Feature::Feature_ROI);
-			//specification.addFeature(Feature::Feature_Triggering);
-			//specification.addFeature(Feature::Feature_GPO);
 
 			return specification;
 		}
 
 		//----------
 		void UEye::close() {
-			is_FreeImageMem(this->cameraHandle, (char *) this->pixels.getPixels(), this->imageMemoryID);
+			is_FreeImageMem(this->cameraHandle, (char *) this->pixels.getData(), this->imageMemoryID);
 			is_ExitCamera(this->cameraHandle);
 			this->cameraHandle = NULL;
 		}
@@ -172,8 +160,9 @@ namespace ofxMachineVision {
 			//currently we don't use free run mode
 		}
 
+		/*
 		//----------
-		void UEye::setExposure(Microseconds exposureMicros) {
+		void UEye::setExposure(chrono::microseconds exposureMicros) {
 			double autoExposure = 0.0;
 			int result;
 			result = is_SetAutoParameter(this->cameraHandle, IS_SET_ENABLE_AUTO_SHUTTER, &autoExposure, 0);
@@ -181,7 +170,7 @@ namespace ofxMachineVision {
 				OFXMV_ERROR << "Couldn't stop auto exposure";
 			}
 
-			double exposureMillis = (double)exposureMicros / 1000.0;
+			double exposureMillis = (double)exposureMicros.count() / 1000.0;
 			result = is_Exposure(this->cameraHandle, IS_EXPOSURE_CMD_SET_EXPOSURE, &exposureMillis, sizeof(exposureMillis));
 			if (result != IS_SUCCESS) {
 				OFXMV_ERROR << "Couldn't set exposure";
@@ -292,30 +281,27 @@ namespace ofxMachineVision {
 
 			is_AOI(this->cameraHandle, IS_AOI_IMAGE_SET_AOI, &aoiRect, sizeof(aoiRect));
 		}
+		*/
 
 		//----------
-		void UEye::getFrame(shared_ptr<Frame> frame) {
+		shared_ptr<Frame> UEye::getFrame() {
 			auto result = is_FreezeVideo(this->cameraHandle, IS_WAIT);
 			if (result != IS_SUCCESS) {
 				if (result != IS_TIMED_OUT) {
-					OFXMV_ERROR << "Failed to capture frame";
+					throw(ofxMachineVision::Exception("Failed to capture frame"));
 				}
-				return;
 			}
-
-			frame->lockForWriting();
 
 			UEYEIMAGEINFO imageInfo;
 			if (is_GetImageInfo(this->cameraHandle, this->imageMemoryID, &imageInfo, sizeof(imageInfo)) == IS_SUCCESS) {
-				frame->setTimestamp(imageInfo.u64TimestampDevice / 10);
+				auto frame = FramePool::X().getAvailableFrameFilledWith(this->pixels);
+				frame->setTimestamp(chrono::microseconds(imageInfo.u64TimestampDevice / 10));
 				frame->setFrameIndex(imageInfo.u64FrameNumber);
+				return frame;
 			}
 			else {
-				OFXMV_ERROR << "Failed to get frame info";
+				throw(ofxMachineVision::Exception("Failed to get image info"));
 			}
-
-			frame->getPixels() = this->pixels;
-			frame->unlock();
 		}
 	}
 }

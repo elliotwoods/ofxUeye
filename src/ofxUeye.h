@@ -25,20 +25,16 @@ namespace ofxMachineVision {
 
 			UEye();
 			string getTypeName() const override;
-			shared_ptr<Base::InitialisationSettings> getDefaultSettings() override {
+			shared_ptr<Base::InitialisationSettings> getDefaultSettings() const override {
 				return make_shared<InitialisationSettings>();
 			}
 			Specification open(shared_ptr<Base::InitialisationSettings> = nullptr) override;
 			void close() override;
 			bool startCapture() override;
 			void stopCapture() override;
-			void setExposure(ofxMachineVision::Microseconds) override;
-			void setGain(float) override;
-			void setBinning(int binningX = 1, int binningY = 1) override;
-			void setROI(const ofRectangle &) override;
 			/*void setTriggerMode(const ofxMachineVision::TriggerMode &, const ofxMachineVision::TriggerSignalType &) override;
 			void setGPOMode(const ofxMachineVision::GPOMode &) override;*/
-			void getFrame(shared_ptr<ofxMachineVision::Frame>) override;
+			shared_ptr<Frame> getFrame() override;
 
 		protected:
 			DWORD cameraHandle;
