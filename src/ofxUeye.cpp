@@ -97,7 +97,7 @@ namespace ofxMachineVision {
 
 				//go through list finding our format
 				bool foundFormat = false;
-				for (int i = 0; i < count; i++) {
+				for (UINT i = 0; i < count; i++) {
 					auto & format = pformatList->FormatInfo[i];
 					if (format.nFormatID == imageFormat) {
 						//found the format
@@ -117,7 +117,7 @@ namespace ofxMachineVision {
 					OFXMV_ERROR << "This camera doesn't support the image format you specified.";
 					OFXMV_NOTICE << "Supported formats:";
 
-					for (int i = 0; i < count; i++) {
+					for (UINT i = 0; i < count; i++) {
 						auto & format = pformatList->FormatInfo[i];
 						OFXMV_NOTICE << " [" << format.nFormatID << "] \"" << format.strFormatName << "\" " << format.nWidth << "x" << format.nHeight;
 					}
@@ -126,7 +126,7 @@ namespace ofxMachineVision {
 
 			auto specification = Specification(CaptureSequenceType::Continuous, width, height, cameraInfo.ID, sensorInfo.strSensorName, cameraInfo.SerNo);
 
-			this->pixels.allocate(width, height, OF_IMAGE_GRAYSCALE);
+			this->pixels.allocate(width, height, OF_PIXELS_GRAY);
 			is_SetAllocatedImageMem(this->cameraHandle, width, height, 8, (char *) this->pixels.getData(), &this->imageMemoryID);
 			is_SetImageMem(this->cameraHandle, (char *) this->pixels.getData(), this->imageMemoryID);
 
